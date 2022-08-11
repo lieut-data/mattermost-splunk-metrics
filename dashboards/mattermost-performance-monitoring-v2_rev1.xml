@@ -1,0 +1,255 @@
+<form version="1.1">
+  <label>Mattermost Performance Monitoring v2</label>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="field1">
+      <label></label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <chart>
+        <title>HTTP Requests per second</title>
+        <search>
+          <query>| mstats rate(mattermost_http_requests_total) as host_total where index="wss_metrics" by _timeseries, host span=1m
+| stats sum(host_total) as host_total by _time, host
+| timechart avg(host_total) span=1m by host
+| addtotals</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>DB Calls per second</title>
+        <search>
+          <query>| mstats rate(mattermost_db_store_time_count) as host_total where index="wss_metrics" by _timeseries, host span=1m
+| stats sum(host_total) as host_total by _time, host
+| timechart avg(host_total) span=1m by host
+| addtotals</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>API Latency</title>
+        <search>
+          <query>| mstats rate(mattermost_api_time_bucket) as requests_per_sec where index="wss_metrics" by _timeseries, le, host span=30s
+| stats sum(requests_per_sec) as total_requests_per_sec by _time, le, host
+| `histperc(0.99, total_requests_per_sec, le, "_time, host")`
+| eval p99_{host} = histperc * 1000
+| fields _time, p99_*
+| selfjoin _time
+| join type=left _time [mstats rate(mattermost_api_time_bucket) as requests_per_sec where index="wss_metrics" by _timeseries, le, host span=30s
+| stats sum(requests_per_sec) as total_requests_per_sec by _time, le, host
+| `histperc(0.50, total_requests_per_sec, le, "_time, host")`
+| eval p50_{host} = histperc * 1000
+| fields _time, p50_*
+| selfjoin _time]</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.text">ms</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Store Latency</title>
+        <search>
+          <query>| mstats rate(mattermost_db_store_time_bucket) as requests_per_sec where index="wss_metrics" by _timeseries, le, host span=30s
+| stats sum(requests_per_sec) as total_requests_per_sec by _time, le, host
+| `histperc(0.99, total_requests_per_sec, le, "_time, host")`
+| eval p99_{host} = histperc * 1000
+| fields _time, p99_*
+| selfjoin _time
+| join type=left _time [mstats rate(mattermost_db_store_time_bucket) as requests_per_sec where index="wss_metrics" by _timeseries, le, host span=30s
+| stats sum(requests_per_sec) as total_requests_per_sec by _time, le, host
+| `histperc(0.50, total_requests_per_sec, le, "_time, host")`
+| eval p50_{host} = histperc * 1000
+| fields _time, p50_*
+| selfjoin _time]</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.text">ms</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Top 10 DB Calls by Count</title>
+        <search>
+          <query>| mstats rate(mattermost_db_store_time_count) as db_calls_per_sec where index="wss_metrics" by _timeseries, method span=1m
+| sort -db_calls_per_sec
+| timechart max(db_calls_per_sec) by method where max in top10
+| eval OTHER = 0
+| rename OTHER TO "_"</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Top 10 API Requests by Count</title>
+        <search>
+          <query>| mstats rate_sum(mattermost_api_time_count) as api_calls_per_sec where index="wss_metrics" by _timeseries, handler span=1m
+| sort -api_calls_per_sec
+| timechart max(api_calls_per_sec) by handler where max in top10
+| eval OTHER = 0
+| rename OTHER TO "_"</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Channel Load Duration</title>
+        <search>
+          <query>| mstats rate(mattermost_api_time_bucket) as requests_per_sec where index="wss_metrics" AND handler = "getPostsForChannelAroundLastUnread" by _timeseries, le, host span=30s
+| stats sum(requests_per_sec) as total_requests_per_sec by _time, le, host
+| `histperc(0.99, total_requests_per_sec, le, "_time, host")`
+| eval p99_{host} = histperc * 1000
+| fields _time, p99_*
+| selfjoin _time
+| join type=left _time [mstats rate(mattermost_api_time_bucket) as requests_per_sec where index="wss_metrics" AND handler = "getPostsForChannelAroundLastUnread" by _timeseries, le, host span=30s
+| stats sum(requests_per_sec) as total_requests_per_sec by _time, le, host
+| `histperc(0.50, total_requests_per_sec, le, "_time, host")`
+| eval p50_{host} = histperc * 1000
+| fields _time, p50_*
+| selfjoin _time]</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.text">ms</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>CreatePost Duration</title>
+        <search>
+          <query>| mstats rate(mattermost_api_time_bucket) as requests_per_sec where index="wss_metrics" AND handler = "createPost" by _timeseries, le, host span=30s
+| stats sum(requests_per_sec) as total_requests_per_sec by _time, le, host
+| `histperc(0.99, total_requests_per_sec, le, "_time, host")`
+| eval p99_{host} = histperc * 1000
+| fields _time, p99_*
+| selfjoin _time
+| join type=left _time [mstats rate(mattermost_api_time_bucket) as requests_per_sec where index="wss_metrics" AND handler = "createPost" by _timeseries, le, host span=30s
+| stats sum(requests_per_sec) as total_requests_per_sec by _time, le, host
+| `histperc(0.50, total_requests_per_sec, le, "_time, host")`
+| eval p50_{host} = histperc * 1000
+| fields _time, p50_*
+| selfjoin _time]</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Number of connected devices (WebSocket Connections)</title>
+        <search>
+          <query>| mstats avg(mattermost_http_websockets_total) as host_total where index="wss_metrics" by _timeseries, host span=1m
+| timechart avg(host_total) span=1m by host
+| addtotals</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>DB Connections</title>
+        <search>
+          <query>| mstats avg(mattermost_db_master_connections_total) as master where index="wss_metrics" by _timeseries span=1m
+| join type=left _time [| mstats avg(mattermost_db_replica_connections_total) as replica where index="wss_metrics" by _timeseries span=1m]</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+</form>

@@ -71,9 +71,21 @@ Usage of ./prometheus2splunk:
         http request timeouts (default 3s)
 ```
 
+In addition to passing as flags, the configuration can be specified as environment variables:
+```
+export SCRAPE_INTERVAL=15s
+export ALLOW_INSECURE=true
+export SPLUNK_TARGET=https://<your id>.splunkcloud.com:8088/services/collector
+export SPLUNK_AUTHORIZATION=<your token>
+export LOG_LEVEL=debug
+
+./prometheus2splunk 
+```
+
 Running with at least debug logs enabled shows the regular background operation, but otherwise the job is silent:
 ```
 ./prometheus2splunk --scrape_interval 15s --allow_insecure --splunk_target https://<your id>.splunkcloud.com:8088/services/collector --splunk_authorization <your token> --log_level debug
+DEBU[0000] loaded config                                 config="map[allow_insecure:true log_level:debug scrape_interval:15s scrape_target:http://localhost:8067/metrics splunk_authorization:<your token> splunk_target:https://<your id>.splunkcloud.com:8088/services/collector timeout:3s]"
 DEBU[0000] scraping target                               scrape_target="http://localhost:8067/metrics"
 DEBU[0000] read body                                     bytes=625660 scrape_target="http://localhost:8067/metrics"
 DEBU[0000] successfully posted payload                   bytes=0 splunk_target="https://<your id>.splunkcloud.com:8088/services/collector"

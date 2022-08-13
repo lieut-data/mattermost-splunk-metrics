@@ -22,13 +22,13 @@ import (
 )
 
 func main() {
-	scrapeTarget := flag.String("scrape_target", "http://localhost:8067/metrics", "prometheus exporter to scrape")
-	scrapeInterval := flag.Duration("scrape_interval", 15*time.Second, "interval on which to scrape")
-	splunkTarget := flag.String("splunk_target", "", "splunk hostname")
-	splunkAuthorization := flag.String("splunk_authorization", "", "token to authorize splunk")
-	insecure := flag.Bool("allow_insecure", false, "skip certificate verification")
-	logLevel := flag.String("log_level", "info", "logrus log level (error, info, debug, ...)")
-	timeout := flag.Duration("timeout", 3*time.Second, "http request timeouts")
+	scrapeTarget := flag.String("scrape_target", defaultString("SCRAPE_TARGET", "http://localhost:8067/metrics"), "prometheus exporter to scrape")
+	scrapeInterval := flag.Duration("scrape_interval", defaultDuration("SCRAPE_INTERVAL", 15*time.Second), "interval on which to scrape")
+	splunkTarget := flag.String("splunk_target", defaultString("SPLUNK_TARGET", ""), "splunk hostname")
+	splunkAuthorization := flag.String("splunk_authorization", defaultString("SPLUNK_AUTHORIZATION", ""), "token to authorize splunk")
+	insecure := flag.Bool("allow_insecure", defaultBool("ALLOW_INSECURE", false), "skip certificate verification")
+	logLevel := flag.String("log_level", defaultString("LOG_LEVEL", "info"), "logrus log level (error, info, debug, ...)")
+	timeout := flag.Duration("timeout", defaultDuration("TIMEOUT", 3*time.Second), "http request timeouts")
 
 	flag.Parse()
 
@@ -37,6 +37,8 @@ func main() {
 		logrus.WithError(err).Fatal("failed to parse log level")
 	}
 	logrus.SetLevel(logrusLevel)
+
+	logrus.WithField("config", getConfig(flag.CommandLine)).Debug("loaded config")
 
 	if *splunkTarget == "" {
 		logrus.Fatal("invalid splunk target")

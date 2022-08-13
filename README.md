@@ -88,11 +88,11 @@ Running with at least debug logs enabled shows the regular background operation,
 DEBU[0000] loaded config                                 config="map[allow_insecure:true log_level:debug scrape_interval:15s scrape_target:http://localhost:8067/metrics splunk_authorization:<your token> splunk_target:https://<your id>.splunkcloud.com:8088/services/collector timeout:3s]"
 DEBU[0000] scraping target                               scrape_target="http://localhost:8067/metrics"
 DEBU[0000] read body                                     bytes=625660 scrape_target="http://localhost:8067/metrics"
-DEBU[0000] successfully posted payload                   bytes=0 splunk_target="https://<your id>.splunkcloud.com:8088/services/collector"
+DEBU[0000] successfully posted payload                   bytes=166914 splunk_target="https://<your id>.splunkcloud.com:8088/services/collector"
 DEBU[0000] sleeping until next scrape                    duration=15s
 DEBU[0015] scraping target                               scrape_target="http://localhost:8067/metrics"
 DEBU[0015] read body                                     bytes=625637 scrape_target="http://localhost:8067/metrics"
-DEBU[0015] successfully posted payload                   bytes=0 splunk_target="https://<your id>.splunkcloud.com:8088/services/collector"
+DEBU[0015] successfully posted payload                   bytes=166914 splunk_target="https://<your id>.splunkcloud.com:8088/services/collector"
 DEBU[0015] sleeping until next scrape                    duration=15s
 ```
 

@@ -169,6 +169,7 @@ func doScrape(ctx context.Context, scrapeTarget, hostname string) *bytes.Buffer 
 
 func sendToSplunk(ctx context.Context, splunkTarget, splunkAuthorization string, payload *bytes.Buffer) error {
 	logger := logrus.WithField("splunk_target", splunkTarget)
+	payloadLen := payload.Len()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, splunkTarget, payload)
 	if err != nil {
@@ -184,7 +185,7 @@ func sendToSplunk(ctx context.Context, splunkTarget, splunkAuthorization string,
 		return nil
 	}
 	if resp.StatusCode == 200 {
-		logger.WithField("bytes", payload.Len()).Debug("successfully posted payload")
+		logger.WithField("bytes", payloadLen).Debug("successfully posted payload")
 	} else {
 		bodyError, err := ioutil.ReadAll(resp.Body)
 		if err == nil {
